@@ -1,0 +1,161 @@
+---
+title: "Data Analysis"
+author: "Preston Peck"
+date: "9/19/2021"
+output: html_document
+---
+
+# Load Libraries
+
+```{r}
+library(dplyr)
+library(stringr)
+library(readr)
+library(purrr)
+```
+
+# Import Data
+
+```{r}
+tournamentInfo <- read_delim("data/tournamentinfo.txt", "\\n", col_names = FALSE, show_col_types = FALSE)
+```
+
+# Format Lines
+
+```{r}
+divider <- "-----------------------------------------------------------------------------------------"
+
+tournamentInfo <- (tournamentInfo %>%
+  filter(!grepl(divider, X1)) %>%
+  lapply(function(x) str_trim(x)) %>%
+  lapply(function(x) substr(x, 1, nchar(x) - 1)) %>%
+  lapply(function(x) str_split(x, "\\|", simplify = TRUE))
+)[[1]]
+
+tournamentInfo <- t(apply(tournamentInfo, 1, function(x) str_squish(x)))
+tournamentInfo
+```
+
+# Extract Column Names
+We look at the first 2 rows and extract column names
+```{r}
+columnNames <- data.frame(c1 = tournamentInfo[1,], c2 = tournamentInfo[2,])
+
+idRtgSplit <- str_split(columnNames[2, 2], " / ") %>%
+  unlist
+
+twoPartColumnNames <- columnNames[3:10, 1:2]
+concatenatedColumns <- paste(twoPartColumnNames$c1, twoPartColumnNames$c2)
+
+columnNames <- c(
+  columnNames[1, 1], 
+  columnNames[1, 2], 
+  columnNames[2, 1], 
+  idRtgSplit[1], 
+  idRtgSplit[2], 
+  unlist(concatenatedColumns)
+)
+
+columnNames
+```
+
+# Combine Rows
+We combine every 2 rows after the header rows since they comprise a single player's record
+```{r}
+mergedTournamentInfo <- matrix(NA, ncol = 13)
+mergedTournamentInfo <- as.data.frame(mergedTournamentInfo)
+colnames(mergedTournamentInfo) <- columnNames
+
+max <- length(tournamentInfo[,1])
+
+for (x in 3:max - 1) {
+  if (x %% 2 == 1) {
+    idRtgSplit <- str_split(tournamentInfo[x + 1, 2], " / ") %>%
+      unlist
+    
+    mergedTournamentInfo <- mergedTournamentInfo %>%
+      rbind(c(tournamentInfo[x, 1],
+          tournamentInfo[x + 1, 1],
+          tournamentInfo[x, 2],
+          idRtgSplit[1],
+          idRtgSplit[2],
+          tournamentInfo[x, 3],
+          tournamentInfo[x, 4],
+          tournamentInfo[x, 5],
+          tournamentInfo[x, 6],
+          tournamentInfo[x, 7],
+          tournamentInfo[x, 8],
+          tournamentInfo[x, 9],
+          tournamentInfo[x, 10]
+        )
+      )
+  }
+}
+
+mergedTournamentInfo <- mergedTournamentInfo %>%
+  slice(-c(1))
+
+mergedTournamentInfo
+```
+
+# Extract Subset
+We capture a subset of information from the previous table to create a new table and extrube it to create an Average Pre Chess Rating of Opponents column
+```{r}
+columnNames <- c(
+  "Player’s Name", 
+  "Player’s State", 
+  "Total Number of Points", 
+  "Player’s Pre-Rating", 
+  "Average Pre Chess Rating of Opponents"
+)
+
+formattedTournamentInfo <- matrix(NA, ncol = 5)
+formattedTournamentInfo <- as.data.frame(formattedTournamentInfo)
+colnames(formattedTournamentInfo) <- columnNames
+
+max <- length(mergedTournamentInfo[, 1])
+
+for (x in 1:max) {
+  opponentScores <- c()
+  
+  for (y in 7:13) {
+    index <- mergedTournamentInfo[x, y] %>%
+      str_replace_all("[^0-9]", "")
+    
+    opponentPreScore <- as.numeric(((mergedTournamentInfo[index, 5] %>%
+      str_split("->") %>%
+      unlist)[1] %>%
+      str_split("P") %>%
+      unlist)[1] %>%
+      str_replace_all("[^0-9]", ""))
+    
+    opponentScores <- opponentScores %>%
+      append(opponentPreScore)
+  }
+  
+  meanOpponentScore <- opponentScores[!is.na(opponentScores) & is.numeric(opponentScores)] %>%
+    mean %>%
+    round(2)
+  
+  preScore <- as.numeric(((mergedTournamentInfo[x, 5] %>%
+      str_split("->") %>%
+      unlist)[1] %>%
+      str_split("P") %>%
+      unlist)[1] %>%
+      str_replace_all("[^0-9]", ""))
+    
+  formattedTournamentInfo <- formattedTournamentInfo %>%
+    rbind(c(mergedTournamentInfo[x, 3],
+        mergedTournamentInfo[x, 2],
+        mergedTournamentInfo[x, 6],
+        preScore,
+        meanOpponentScore
+      )
+    )
+}
+
+formattedTournamentInfo <- formattedTournamentInfo %>%
+  slice(-c(1))
+
+formattedTournamentInfo
+```
