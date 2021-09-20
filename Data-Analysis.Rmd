@@ -60,7 +60,9 @@ columnNames
 ```
 
 # Combine Rows
+
 We combine every 2 rows after the header rows since they comprise a single player's record
+
 ```{r}
 mergedTournamentInfo <- matrix(NA, ncol = 13)
 mergedTournamentInfo <- as.data.frame(mergedTournamentInfo)
@@ -99,7 +101,9 @@ mergedTournamentInfo
 ```
 
 # Extract Subset
-We capture a subset of information from the previous table to create a new table and extrube it to create an Average Pre Chess Rating of Opponents column
+
+We capture a subset of information from the previous table to create a new table and extrude it to create an Average Pre Chess Rating of Opponents column
+
 ```{r}
 columnNames <- c(
   "Player’s Name", 
@@ -158,4 +162,10 @@ formattedTournamentInfo <- formattedTournamentInfo %>%
   slice(-c(1))
 
 formattedTournamentInfo
+```
+
+# Export Data
+
+```{r}
+write.csv(formattedTournamentInfo, "data//tournamentinfo.csv", row.names = FALSE)
 ```
