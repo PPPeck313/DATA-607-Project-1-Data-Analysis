@@ -18,9 +18,16 @@ library(purrr)
 
 ```{r}
 tournamentInfo <- read_delim("data/tournamentinfo.txt", "\\n", col_names = FALSE, show_col_types = FALSE)
+tournamentInfo
 ```
 
 # Format Lines
+We begin to shape our table:
+
+1. Remove row decoration
+2. Time leading and trailing whitespace
+3. Remove trailing "|" which will create an extra empty bucket when split
+4. Split X1 column into sub-columns by "|"
 
 ```{r}
 divider <- "-----------------------------------------------------------------------------------------"
@@ -37,7 +44,12 @@ tournamentInfo
 ```
 
 # Extract Column Names
-We look at the first 2 rows and extract column names
+We look at the first 2 rows and extract column names:
+
+1. Get complete column names from single cells
+2. Split combined column names and extract
+3. Merge 2 part column names across rows
+
 ```{r}
 columnNames <- data.frame(c1 = tournamentInfo[1,], c2 = tournamentInfo[2,])
 
@@ -61,7 +73,7 @@ columnNames
 
 # Combine Rows
 
-We combine every 2 rows after the header rows since they comprise a single player's record
+We combine every 2 rows after the header rows since they comprise a single player's record. We split combined values when necessary.
 
 ```{r}
 mergedTournamentInfo <- matrix(NA, ncol = 13)
@@ -102,7 +114,7 @@ mergedTournamentInfo
 
 # Extract Subset
 
-We capture a subset of information from the previous table to create a new table and extrude it to create an Average Pre Chess Rating of Opponents column
+We capture a subset of information from the previous table to create a new table and extrude it to create an Average Pre Chess Rating of Opponents column. We iterate through a player's opponent ids and jump to the corresponding row for more information about the opponent and split combined value and format data when necessary.
 
 ```{r}
 columnNames <- c(

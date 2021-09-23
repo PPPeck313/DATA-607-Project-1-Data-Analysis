@@ -188,10 +188,32 @@ library(purrr)</code></pre>
 </div>
 <div id="import-data" class="section level1">
 <h1>Import Data</h1>
-<pre class="r"><code>tournamentInfo &lt;- read_delim(&quot;data/tournamentinfo.txt&quot;, &quot;\\n&quot;, col_names = FALSE, show_col_types = FALSE)</code></pre>
+<pre class="r"><code>tournamentInfo &lt;- read_delim(&quot;data/tournamentinfo.txt&quot;, &quot;\\n&quot;, col_names = FALSE, show_col_types = FALSE)
+tournamentInfo</code></pre>
+<pre><code>## # A tibble: 196 × 1
+##    X1                                                                           
+##    &lt;chr&gt;                                                                        
+##  1 &quot;---------------------------------------------------------------------------…
+##  2 &quot; Pair | Player Name                     |Total|Round|Round|Round|Round|Roun…
+##  3 &quot; Num  | USCF ID / Rtg (Pre-&gt;Post)       | Pts |  1  |  2  |  3  |  4  |  5 …
+##  4 &quot;---------------------------------------------------------------------------…
+##  5 &quot;    1 | GARY HUA                        |6.0  |W  39|W  21|W  18|W  14|W   …
+##  6 &quot;   ON | 15445895 / R: 1794   -&gt;1817     |N:2  |W    |B    |W    |B    |W   …
+##  7 &quot;---------------------------------------------------------------------------…
+##  8 &quot;    2 | DAKSHESH DARURI                 |6.0  |W  63|W  58|L   4|W  17|W  1…
+##  9 &quot;   MI | 14598900 / R: 1553   -&gt;1663     |N:2  |B    |W    |B    |W    |B   …
+## 10 &quot;---------------------------------------------------------------------------…
+## # … with 186 more rows</code></pre>
 </div>
 <div id="format-lines" class="section level1">
 <h1>Format Lines</h1>
+<p>We begin to shape our table:</p>
+<ol style="list-style-type: decimal">
+<li>Remove row decoration</li>
+<li>Time leading and trailing whitespace</li>
+<li>Remove trailing “|” which will create an extra empty bucket when split</li>
+<li>Split X1 column into sub-columns by “|”</li>
+</ol>
 <pre class="r"><code>divider &lt;- &quot;-----------------------------------------------------------------------------------------&quot;
 
 tournamentInfo &lt;- (tournamentInfo %&gt;%
@@ -468,7 +490,12 @@ tournamentInfo</code></pre>
 </div>
 <div id="extract-column-names" class="section level1">
 <h1>Extract Column Names</h1>
-<p>We look at the first 2 rows and extract column names</p>
+<p>We look at the first 2 rows and extract column names:</p>
+<ol style="list-style-type: decimal">
+<li>Get complete column names from single cells</li>
+<li>Split combined column names and extract</li>
+<li>Merge 2 part column names across rows</li>
+</ol>
 <pre class="r"><code>columnNames &lt;- data.frame(c1 = tournamentInfo[1,], c2 = tournamentInfo[2,])
 
 idRtgSplit &lt;- str_split(columnNames[2, 2], &quot; / &quot;) %&gt;%
@@ -494,7 +521,7 @@ columnNames</code></pre>
 </div>
 <div id="combine-rows" class="section level1">
 <h1>Combine Rows</h1>
-<p>We combine every 2 rows after the header rows since they comprise a single player’s record</p>
+<p>We combine every 2 rows after the header rows since they comprise a single player’s record. We split combined values when necessary.</p>
 <pre class="r"><code>mergedTournamentInfo &lt;- matrix(NA, ncol = 13)
 mergedTournamentInfo &lt;- as.data.frame(mergedTournamentInfo)
 colnames(mergedTournamentInfo) &lt;- columnNames
@@ -662,7 +689,7 @@ mergedTournamentInfo</code></pre>
 </div>
 <div id="extract-subset" class="section level1">
 <h1>Extract Subset</h1>
-<p>We capture a subset of information from the previous table to create a new table and extrude it to create an Average Pre Chess Rating of Opponents column</p>
+<p>We capture a subset of information from the previous table to create a new table and extrude it to create an Average Pre Chess Rating of Opponents column. We iterate through a player’s opponent ids and jump to the corresponding row for more information about the opponent and split combined value and format data when necessary.</p>
 <pre class="r"><code>columnNames &lt;- c(
   &quot;Player’s Name&quot;, 
   &quot;Player’s State&quot;, 
