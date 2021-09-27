@@ -1,4 +1,5 @@
-# DATA-607-Project-1-Data-Analysis
+# Project 1 - Data Analysis
+
 In this project, you’re given a text file with chess tournament results where the information has some structure. Your job is to create an R Markdown file that generates a .CSV file (that could for example be imported into a SQL database) with the following information for all of the players:</p>
 Player’s Name, Player’s State, Total Number of Points, Player’s Pre-Rating, and Average Pre Chess Rating of Opponents</p>
 For the first player, the information would be:</p>
